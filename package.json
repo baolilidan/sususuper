@@ -7,6 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "build:browser": "npm run build && node scripts/build-browser.mjs",
+    "build:study": "node scripts/build-study-browser.mjs",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
