@@ -9,6 +9,7 @@ const colors = {
   green: PALETTE['laundry.washer.body'].hex,
   orange: PALETTE['laundry.basket'].hex,
   blue: PALETTE['room.floorFar'].hex,
+  wall: PALETTE['room.sideWall'].hex,
 };
 for (const [name, value] of Object.entries(colors)) {
   document.documentElement.style.setProperty(`--${name}`, value);
@@ -26,8 +27,8 @@ document.querySelector('#app').innerHTML = `
       <a class="study-brand" href="#" aria-label="回到房间初始视图">层间 <span>·</span> LAYERED ROOM</a>
       <div class="study-header-right">
         <div class="study-view-switch" role="group" aria-label="切换视觉草图">
-          <button data-view="flat" class="is-current">A 原图构图</button>
-          <button data-view="layered">B 透叠倾斜</button>
+          <button data-view="hybrid" class="is-current">局部透叠</button>
+          <button data-view="flat">原图对照</button>
         </div>
         <span class="study-edition">ROOM STUDY / 01</span>
       </div>
@@ -44,30 +45,37 @@ document.querySelector('#app').innerHTML = `
         </div>
         <p class="study-footnote">拖动画面平移 · 滚轮缩放<br>点选物件查看局部</p>
       </aside>
-      <section class="study-stage" data-view="flat" aria-label="可缩放的房间图">
+      <section class="study-stage" data-view="hybrid" aria-label="可缩放的房间图">
         <div class="study-viewport">
           <div class="study-frame"><div class="study-artwork">
-            <div class="study-sheet study-sheet-far" aria-hidden="true"></div>
-            <div class="study-sheet study-sheet-near" aria-hidden="true"></div>
             <img class="study-image" src="${window.__ROOM_REFERENCE_IMAGE__ || '/reference_room.png'}" alt="浅色剖切房间：黄色侧墙、蓝色天光与地面、卫浴和洗衣物件" draggable="false" />
+            <svg class="study-room-layers" viewBox="0 0 2482 1755" aria-hidden="true">
+              <path class="study-wall-left" d="M8 4 526 400 526 1299 8 1750Z" />
+              <path class="study-wall-right" d="M2474 4 1966 400 1966 1299 2474 1750Z" />
+              <path class="study-floor-layer" d="M526 1299 1966 1299 2474 1750 8 1750Z" />
+            </svg>
             <svg class="study-hotspots" viewBox="0 0 2482 1755" role="group" aria-label="可点击物件">
               <g class="study-hotspot" data-id="washer" tabindex="0" role="button" aria-label="洗衣机" style="--outline:var(--green)">
-                <rect x="563" y="975" width="312" height="334" rx="22" />
+                <rect class="study-echo" x="582" y="988" width="312" height="334" rx="22" />
+                <rect class="study-target" x="563" y="975" width="312" height="334" rx="22" />
                 <circle class="study-pin" cx="550" cy="1004" r="25" /><text class="study-pin-text" x="550" y="1005">01</text>
               </g>
               <g class="study-hotspot" data-id="basket" tabindex="0" role="button" aria-label="脏衣篓的衣服" style="--outline:var(--orange)">
-                <ellipse cx="1014" cy="1186" rx="103" ry="96" />
+                <ellipse class="study-echo" cx="1032" cy="1198" rx="103" ry="96" />
+                <ellipse class="study-target" cx="1014" cy="1186" rx="103" ry="96" />
                 <circle class="study-pin" cx="1120" cy="1114" r="25" /><text class="study-pin-text" x="1120" y="1115">02</text>
               </g>
               <g class="study-hotspot" data-id="slippers" tabindex="0" role="button" aria-label="拖鞋" style="--outline:var(--pink)">
-                <rect x="1517" y="1120" width="75" height="165" rx="35" transform="rotate(61 1554 1202)" />
-                <rect x="1578" y="1153" width="75" height="165" rx="35" transform="rotate(61 1615 1235)" />
+                <rect class="study-echo" x="1524" y="1140" width="131" height="49" rx="25" transform="rotate(-23 1590 1165)" />
+                <rect class="study-echo" x="1570" y="1184" width="131" height="49" rx="25" transform="rotate(-23 1636 1209)" />
+                <rect class="study-target" x="1510" y="1128" width="131" height="49" rx="25" transform="rotate(-23 1576 1153)" />
+                <rect class="study-target" x="1556" y="1172" width="131" height="49" rx="25" transform="rotate(-23 1622 1197)" />
                 <circle class="study-pin" cx="1700" cy="1166" r="25" /><text class="study-pin-text" x="1700" y="1167">03</text>
               </g>
             </svg>
           </div></div>
         </div>
-        <div class="study-stage-top">01 / 房间 <span>原图构图实验</span></div>
+        <div class="study-stage-top">01 / 房间 <span>局部透叠实验</span></div>
         <div class="study-controls" aria-label="画面缩放控制">
           <button data-action="zoom-out" aria-label="缩小">−</button>
           <span class="study-zoom">100%</span>
@@ -93,12 +101,10 @@ const artwork = document.querySelector('.study-artwork');
 const tooltip = document.querySelector('.study-tooltip');
 const card = document.querySelector('.study-card');
 const zoomText = document.querySelector('.study-zoom');
-const state = { scale: 1, x: 0, y: 0, down: null, view: 'flat' };
+const state = { scale: 1, x: 0, y: 0, down: null, view: 'hybrid' };
 
 function draw() {
-  const posture = state.view === 'layered' ? 'perspective(1400px) rotateX(6deg) rotateY(-9deg) rotateZ(-2deg)' : '';
-  const baseScale = state.view === 'layered' ? .88 : 1;
-  artwork.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale * baseScale}) ${posture}`;
+  artwork.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
   zoomText.textContent = `${Math.round(state.scale * 100)}%`;
 }
 function zoom(next, clientX, clientY) {
@@ -174,6 +180,7 @@ document.querySelectorAll('[data-select]').forEach(button => button.addEventList
 document.querySelectorAll('.study-view-switch [data-view]').forEach(button => button.addEventListener('click', () => {
   state.view = button.dataset.view;
   document.querySelector('.study-stage').dataset.view = state.view;
+  document.querySelector('.study-stage-top span').textContent = state.view === 'hybrid' ? '局部透叠实验' : '原图构图对照';
   document.querySelectorAll('.study-view-switch [data-view]').forEach(choice => choice.classList.toggle('is-current', choice === button));
   reset();
 }));

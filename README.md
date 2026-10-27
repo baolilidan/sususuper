@@ -2,7 +2,7 @@
 
 ## 新的 HTML 视觉草图
 
-`study.html` 是与旧 3D 场景并存的探索页。A 保留参考图的正面构图；B 加入轻微倾斜和透叠画片。两种模式均可拖动、缩放，并点选洗衣机、衣篓与拖鞋。运行开发服务后打开 `/study.html`；运行 `npm run build:study` 可生成无需依赖的 `study-browser.html` 和 `docs/study.html`。`study-prototype.zip` 包含独立 HTML 与两张草图截图。
+`study.html` 是与旧 3D 场景并存的探索页。当前方案保留原图的正面构图，把透叠放在空间边界和三件物件附近；顶部可切换至原图对照。上一轮的 A、B 草图仍保留为图片。页面可拖动、缩放，并点选洗衣机、衣篓与拖鞋。运行开发服务后打开 `/study.html`；运行 `npm run build:study` 可生成无需依赖的 `study-browser.html` 和 `docs/study.html`。`study-prototype.zip` 包含独立 HTML 与草图截图。
 
 依据用户提供的 `reference_room.png`、`SURFACE_MAP.md` 和 `src/theme/palette.ts` 制作。参考图是一点透视的剖切房间图，因此场景按面和部件着色，没有把整张图投影到模型上。上传原图后，已按用户确认的优先级校准左右和前后摆位；原图与映射表的差异记录在 `NOTES.md`。
 
